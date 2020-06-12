@@ -15,6 +15,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 
 public class SignUpActivity  extends AppCompatActivity implements View.OnClickListener {
 
@@ -56,12 +57,15 @@ public class SignUpActivity  extends AppCompatActivity implements View.OnClickLi
                           Toast.makeText(getApplicationContext(), "User Registered Successful", Toast.LENGTH_SHORT).show();
                           finish();
                       } else {
-                          Toast.makeText(getApplicationContext(), "User Not Registered ", Toast.LENGTH_SHORT).show();
+                          if (task.getException() instanceof FirebaseAuthUserCollisionException) {
+                              Toast.makeText(getApplicationContext(), "Email is Exists ", Toast.LENGTH_SHORT).show();
+                          } else {
+                              Toast.makeText(getApplicationContext(), task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                          }
                       }
                       progressBar.setVisibility(View.GONE);
                   }
               });
-
           }
     }
 
