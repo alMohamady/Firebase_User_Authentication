@@ -56,6 +56,8 @@ public class SignUpActivity  extends AppCompatActivity implements View.OnClickLi
                       if (task.isSuccessful()) {
                           Toast.makeText(getApplicationContext(), "User Registered Successful", Toast.LENGTH_SHORT).show();
                           finish();
+                          startActivity(new Intent(SignUpActivity.this, ProfileActivity.class));
+
                       } else {
                           if (task.getException() instanceof FirebaseAuthUserCollisionException) {
                               Toast.makeText(getApplicationContext(), "Email is Exists ", Toast.LENGTH_SHORT).show();

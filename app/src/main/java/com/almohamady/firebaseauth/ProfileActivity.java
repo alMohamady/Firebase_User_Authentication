@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -14,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -45,6 +47,7 @@ public class ProfileActivity extends AppCompatActivity {
         imageView = findViewById(R.id.imageView);
         progressBar = findViewById(R.id.progressbar);
         mAuth = FirebaseAuth.getInstance();
+        loadUserInformation();
 
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -61,6 +64,32 @@ public class ProfileActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if(mAuth.getCurrentUser() == null){
+            finish();
+            startActivity(new Intent(this, MainActivity.class));
+        }
+    }
+
+    private void loadUserInformation() {
+        FirebaseUser user = mAuth.getCurrentUser();
+
+        if (user != null) {
+            if (user.getPhotoUrl() != null ) {
+                Glide.with(this)
+                        .load(user.getPhotoUrl().toString())
+                        .into(imageView);
+                Log.i("TAGEE", user.getPhotoUrl().toString());
+            }
+            if (user.getDisplayName() != null) {
+                editText.setText(user.getDisplayName());
+            }
+        }
+    }
+
+
     private void updateUserInformation(){
         String displayName = editText.getText().toString();
         if(displayName.isEmpty()) {
@@ -74,6 +103,7 @@ public class ProfileActivity extends AppCompatActivity {
                         .setPhotoUri(Uri.parse(profileImageUrl))
                         .build()
                         ;
+                Log.i("FFEERR-SAVE", profileImageUrl);
                 user.updateProfile(profile).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
@@ -93,7 +123,13 @@ public class ProfileActivity extends AppCompatActivity {
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                     Toast.makeText(getApplicationContext(), "Success", Toast.LENGTH_SHORT).show();
                     progressBar.setVisibility(View.GONE);
-                    profileImageUrl = taskSnapshot.getMetadata().getReference().getDownloadUrl().toString();
+                    //profileImageUrl = taskSnapshot.getMetadata().getReference().getDownloadUrl().toString();
+                    taskSnapshot.getStorage().getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            profileImageUrl = uri.toString();
+                        }
+                    });
                 }
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
