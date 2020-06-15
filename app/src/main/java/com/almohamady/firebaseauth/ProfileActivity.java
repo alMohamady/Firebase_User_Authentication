@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -34,6 +35,7 @@ public class ProfileActivity extends AppCompatActivity {
     private static final  int CHOOSE_IMAGE =101;
     ImageView imageView;
     EditText editText;
+    TextView verified;
     ProgressBar progressBar;
     Uri uriProfileImage;
     String profileImageUrl;
@@ -46,6 +48,7 @@ public class ProfileActivity extends AppCompatActivity {
         editText = findViewById(R.id.editTextDisplayName);
         imageView = findViewById(R.id.imageView);
         progressBar = findViewById(R.id.progressbar);
+        verified = findViewById(R.id.textViewVerified);
         mAuth = FirebaseAuth.getInstance();
         loadUserInformation();
 
@@ -74,17 +77,34 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void loadUserInformation() {
-        FirebaseUser user = mAuth.getCurrentUser();
+        final FirebaseUser user = mAuth.getCurrentUser();
 
         if (user != null) {
             if (user.getPhotoUrl() != null ) {
                 Glide.with(this)
                         .load(user.getPhotoUrl().toString())
                         .into(imageView);
-                Log.i("TAGEE", user.getPhotoUrl().toString());
+                Log.i("IMG_TAG", user.getPhotoUrl().toString());
             }
             if (user.getDisplayName() != null) {
                 editText.setText(user.getDisplayName());
+            }
+
+            if (user.isEmailVerified()) {
+                verified.setText("Email is Verified");
+            }else  {
+                verified.setText("Email is not verified");
+                verified.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        user.sendEmailVerification().addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                Toast.makeText(getApplicationContext(), "Email has been send", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                });
             }
         }
     }
